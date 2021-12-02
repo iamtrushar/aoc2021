@@ -1,11 +1,7 @@
-import * as fs from 'fs';
+import { inputReadNumbers } from "../inFileReader";
 
-
-const input: string = fs.readFileSync("./src/day1/input.txt", "utf8");
-const inputByLine: number[] = input.split("\n").map(Number);
-
+const inputByLine = inputReadNumbers("./src/day1/input.txt");
 console.log(`Part 1, answer: ${part1(inputByLine)}`);
-
 console.log(`Part 2, answer: ${part2(inputByLine)}`);
 
 
