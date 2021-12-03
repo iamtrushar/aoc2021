@@ -1,4 +1,4 @@
-import { inputReadNavigations, Navigation } from "../inFileReader";
+import { inputReadNavigations, Navigation } from "./navigation";
 
 const inputByLine = inputReadNavigations("./src/day2/input.txt");
 console.log(`Part 1, answer: ${part1(inputByLine)}`);
