@@ -7,7 +7,7 @@ export class Navigation {
 
 export const inputReadNavigations = (path: string): Array<Navigation> => {
 
-    const read = readFile(path).map(String);
+    const read = readFile(path, "\n").map(String);
     let nav = new Array<Navigation>();
     read.forEach(element => {
 
