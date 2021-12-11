@@ -49,101 +49,79 @@ function part2(fishy: Array<number>, day: number): number {
     });
 
     let newTracker = new Array<FishyTracker>();
-    tracker.forEach(e => newTracker.push(e));
+    tracker.forEach(e => newTracker.push(new FishyTracker(e.rollingDayCounter, e.itemsInbucket, e.loop)));
 
     let counter = 0;
-    let previousCounter = 0;
+    let totalFishyCounter = 0;
     let dayCounter = 0;
     while (dayCounter <= day) {
 
-        console.log(`day: ${dayCounter}`);
-        
         tracker.forEach(ele => {
+            
+            if (ele.itemsInbucket === 0) {
+                return;
+            }
 
-            let newEle = newTracker.filter(x => x.rollingDayCounter === ele.rollingDayCounter);
-            for (let i = 0; i < ele.loop; i++) {
-
-                counter++;
-                if (ele.itemsInbucket > 0) {
-
-                    if (ele.rollingDayCounter === 0) {
-
-                        let item6 = newTracker.filter(x => x.rollingDayCounter === 6); // find number 6 rolling counter
-                        if (item6.length > 0) { //exist?
-
-                            item6[0].itemsInbucket++;
-                            newEle[0].itemsInbucket--;
-                        }
-                        else {
-
-                            newTracker.push(new FishyTracker(6, 1, 1)) // add new day 6 item
-                            newEle[0].itemsInbucket--;
-                        }
-
-                        let item8 = newTracker.filter(x => x.rollingDayCounter === 8); // find number 8 rolling counter
-                        if (item8.length > 0) //exist?
-                        {
-
-                            item8[0].itemsInbucket++;
-                        }
-                        else {
-
-                            newTracker.push(new FishyTracker(8, 1, 1)) // add new day 8 item
-                        }
+            let newEle = newTracker.filter(x => x.rollingDayCounter === ele.rollingDayCounter)[0];
+            counter += ele.loop;
+            if (ele.itemsInbucket > 0) {
+                if (ele.rollingDayCounter === 0) {
+                    let item6 = newTracker.filter(x => x.rollingDayCounter === 6)[0]; 
+                    if (item6) {
+                        item6.itemsInbucket += ele.loop;
                     }
                     else {
+                        newTracker.push(new FishyTracker(6, ele.itemsInbucket, ele.loop));
+                    }
 
-                        const rollingDayCounter = ele.rollingDayCounter - 1;
-                        let item = newTracker.filter(x => x.rollingDayCounter === rollingDayCounter);
-                        if (item.length > 0) //exist?
-                        {
-
-                            item[0].itemsInbucket++;
-                            newEle[0].itemsInbucket--;
-                        }
-                        else {
-
-                            newTracker.push(new FishyTracker(rollingDayCounter, 1, 1)) // add new day item
-                            newEle[0].itemsInbucket--;
-                        }
+                    let item8 = newTracker.filter(x => x.rollingDayCounter === 8)[0];
+                    if (item8) {
+                        item8.itemsInbucket += ele.loop;
+                    }
+                    else {
+                        newTracker.push(new FishyTracker(8, ele.itemsInbucket, ele.loop));
                     }
                 }
                 else {
-
-                    let item8 = newTracker.filter(x => x.rollingDayCounter === 8); // find number 8 rolling counter
-                    if (item8.length > 0) {//exist?
-
-                        item8[0].itemsInbucket++;
-                        let item6 = newTracker.filter(x => x.rollingDayCounter === 6); // find number 6 rolling counter
-                        if (item6.length > 0) { //exist?
-
-                            item6[0].itemsInbucket++;
-                            newEle[0].itemsInbucket--;
-                        }
-                        else {
-
-                            newTracker.push(new FishyTracker(6, 1, 1)) // add new day 6 item
-                            newEle[0].itemsInbucket--;
-                        }
+                    const rollingDayCounter = ele.rollingDayCounter - 1;
+                    let item = newTracker.filter(x => x.rollingDayCounter === rollingDayCounter)[0];
+                    if (item) {
+                        item.itemsInbucket += ele.loop;
                     }
                     else {
-
-                        newTracker.push(new FishyTracker(8, 1, 1)) // add new day 8 item
-                        newEle[0].itemsInbucket--;
+                        newTracker.push(new FishyTracker(rollingDayCounter, ele.itemsInbucket, ele.loop))
                     }
                 }
+                newEle.itemsInbucket -= ele.loop;
+            }
+            else {
+                let item8 = newTracker.filter(x => x.rollingDayCounter === 8)[0];
+                if (item8) {
+                    item8.itemsInbucket += ele.loop;
+                    let item6 = newTracker.filter(x => x.rollingDayCounter === 6)[0];
+                    if (item6) {
+                        item6.itemsInbucket += ele.loop;
+                    }
+                    else {
+                        newTracker.push(new FishyTracker(6, ele.itemsInbucket, ele.loop))
+                    }
+                }
+                else {
+                    newTracker.push(new FishyTracker(8, ele.itemsInbucket, ele.loop))
+                }
+                newEle.itemsInbucket -= ele.loop;
             }
         });
-        previousCounter = counter;
-        
-        tracker = new Array<FishyTracker>();
-        newTracker.forEach((e, index) => {
 
-            tracker.push(e);
-            tracker[index].loop = e.itemsInbucket; // reset to new loop count
+        counter = Math.abs(totalFishyCounter - counter);
+        totalFishyCounter = counter;
+        tracker = new Array<FishyTracker>();
+        newTracker.forEach(e => {
+            tracker.push(new FishyTracker(e.rollingDayCounter, e.itemsInbucket, e.itemsInbucket));
         });
         dayCounter++;
     }
 
-    return previousCounter;
+    return totalFishyCounter;
 }
+
