@@ -3,21 +3,6 @@ import { Location } from "./common";
 
 const inputByLine = inputReadString("./src/day8/input.txt");
 
-let signals: string[] = new Array<string>();
-let outputs: string[] = new Array<string>();
-inputByLine.forEach(element => {
-
-    const i = element.split("|");
-    //signal
-    const s = i[0].split(" ").filter(x => x);
-    s.forEach(x => signals.push(x.endsWith("\r") ? x.substring(0, x.length - 1) : x));
-
-    //output
-    const o = i[1].split(" ").filter(x => x);
-    o.forEach(x => outputs.push(x.endsWith("\r") ? x.substring(0, x.length - 1) : x));
-});
-
-
 // unique digits segment count 1, 4, 7, or 8
 const digit1 = 2;
 const digit4 = 4;
@@ -25,13 +10,23 @@ const digit7 = 3;
 const digit8 = 7;
 const digits = [digit1, digit4, digit7, digit8];
 
-console.log(`Part 1, answer : ${part1(outputs)}`);
-console.log(`Part 2, answer : ${part2(signals, outputs)}`);
+console.log(`Part 1, answer : ${part1()}`);
+console.log(`Part 2, answer : ${part2()}`);
 
-function part1(outputsIn: Array<string>): number {
 
-    const grouped = groupByArray(outputsIn, "length");
+function part1(): number {
 
+    let outputs: string[] = new Array<string>();
+    inputByLine.forEach(element => {
+
+        const i = element.split("|");
+        //output
+        const o = i[1].split(" ").filter(x => x);
+        o.forEach(x => outputs.push(x.endsWith("\r") ? x.substring(0, x.length - 1) : x));
+
+    });
+
+    const grouped = groupByArray(outputs, "length");
     let sum = 0;
     grouped.forEach((digit: { key: number; values: string[]; }) => {
         if (digits.indexOf(digit.key) != -1) {
@@ -42,94 +37,192 @@ function part1(outputsIn: Array<string>): number {
 }
 
 
+function part2(): number {
+
+    // non-unique segment counts for digits
+    const digit0 = 6; // same segments for 6 & 9
+    const digit5 = 5; // same segments for 3
+
+    let signalsIn: string[];
+    let outputsIn: string[];
+
+    let sum: number = 0;
+
+    inputByLine.forEach(element => {
+
+        signalsIn = new Array<string>();
+        outputsIn = new Array<string>();
+
+        const i = element.split("|");
+        const s = i[0].split(" ").filter(x => x);
+        s.forEach(x => signalsIn.push(x.endsWith("\r") ? x.substring(0, x.length - 1) : x));
+
+        const o = i[1].split(" ").filter(x => x);
+        o.forEach(x => outputsIn.push(x.endsWith("\r") ? x.substring(0, x.length - 1) : x));
+
+        //     0   1   2 
+        //0     (0,1)
+        //1 (1,0)    (1,2)
+        //2      (2,1)
+        //3 (3,0)    (3,2)
+        //4      (4,1)
+        let formDigit = new Array<Location>();
+        const grouped = groupByArray(signalsIn, "length");
+
+        // get 1
+        const one: { key: number; values: string[]; } = grouped.filter(x => x.key == digit1)[0];
+
+        // get 8
+        const eight: { key: number; values: string[]; } = grouped.filter(x => x.key == digit8)[0];
+
+        // get 7 
+        const seven: { key: number; values: string[]; } = grouped.filter(x => x.key == digit7)[0];
+        if (one && seven) {
+
+            const item = seven.values[0];
+            let unMatched = unMatchedSegmentsFromSmaller(item, one.values[0]);
+            if (findChar(formDigit, 0, 1) === "") { formDigit.push(new Location(0, 1, unMatched)); } // one segment is confirmed
+        }
+
+        // get 4
+        let unMatchedFour: string = "";
+        const four: { key: number; values: string[]; } = grouped.filter(x => x.key == digit4)[0];
+        if (four) {
+
+            const item = four.values[0];
+            unMatchedFour = unMatchedSegmentsFromSmaller(item, seven.values[0]);
+        }
 
 
-function part2(signalsIn: Array<string>, outputsIn: Array<string>): string {
+        // find potential 0
+        const hasZero: { key: number; values: string[]; } = grouped.filter(x => x.key == digit0)[0];
+        if (hasZero) {
 
-    //     0   1   2 
-    //0     (0,1)
-    //1 (1,0)    (1,2)
-    //2      (2,1)
-    //3 (3,0)    (3,2)
-    //4      (4,1)
-    let formDigit = new Array<Location>();
-    for (let i = 0; i < 5; i++) {
-        formDigit.push(new Location(i, 0, '.'));
-    }
+            for (let i = 0; i < hasZero.values.length; i++) {
 
-    const grouped = groupByArray(signalsIn, "length");
-    grouped.forEach((digit: { key: number; values: string[]; }) => {
-        if (digits.indexOf(digit.key) != -1) {
+                let potentialZero = hasZero.values[i];
+                const unMatched = unMatchedSegmentsFromSmaller(eight.values[0], potentialZero);
+                if (unMatched.length === 1) {
 
-            const item = digit.values[0];
-            if (digit.key === digit1) {
-                formDigit[1].char = item[0];
-                formDigit[1].y = 2;
-                formDigit[3].char = item[1];
-                formDigit[3].y = 2;
+                    if (four.values[0].indexOf(unMatched) !== -1  // is found in 4
+                        && seven.values[0].indexOf(unMatched) === -1
+                        && one.values[0].indexOf(unMatched) === -1) {
+
+                        if (findChar(formDigit, 2, 1) === "") { formDigit.push(new Location(2, 1, unMatched)); }
+                        break;
+                    }
+                }
             }
-            else if (digit.key === digit4) {
-                formDigit[1].char = item[0];
-                formDigit[1].y = 0;
-                formDigit[1].char = item[1];
-                formDigit[1].y = 2;
-                formDigit[2].char = item[2];
-                formDigit[2].y = 1;
-                formDigit[4].char = item[3];
-                formDigit[4].y = 1;
+
+            unMatchedFour = unMatchedSegmentsFromSmaller(unMatchedFour, formDigit.map(x => x.char).join(""));
+            if (unMatchedFour.length === 1) {
+                
+                if (findChar(formDigit, 1, 0) === "") { formDigit.push(new Location(1, 0, unMatchedFour)); }
             }
-            else if (digit.key === digit7) {
-                formDigit[0].char = item[0];
-                formDigit[0].y = 1;
-                formDigit[1].char = item[0];
-                formDigit[1].y = 2;
-                formDigit[3].char = item[1];
-                formDigit[3].y = 2;
-            }
-            else if (digit.key === digit8) {
 
-                formDigit[0].char = item[0];
-                formDigit[0].y = 1;
+            if (four && seven && findChar(formDigit, 2, 1) !== "") {
 
-                formDigit[1].char = item[1];
-                formDigit[0].y = 1;
-                formDigit[1].char = item[2];
-                formDigit[2].y = 1;
+                // get potential 5
+                const hasFive: { key: number; values: string[]; } = grouped.filter(x => x.key == digit5)[0];
+                if (hasFive) {
 
-                formDigit[2].char = item[3];
-                formDigit[1].y = 1;
+                    for (let i = 0; i < hasFive.values.length; i++) {
 
-                formDigit[3].char = item[4];
-                formDigit[0].y = 1;
-                formDigit[3].char = item[5];
-                formDigit[1].y = 1;
+                        let potentialFive = hasFive.values[i];
+                        let unMatchedFive = unMatchedSegmentsFromSmaller(potentialFive, four.values[0]);
+                        unMatchedFive = unMatchedSegmentsFromSmaller(unMatchedFive, seven.values[0]);
+                        unMatchedFive = unMatchedSegmentsFromSmaller(unMatchedFive, one.values[0]);
+                        if (unMatchedFive.length === 1) {
 
-                formDigit[4].char = item[6];
-                formDigit[1].y = 1;
+                            if (findChar(formDigit, 4, 1) === "") { formDigit.push(new Location(4, 1, unMatchedFive)); }
+                            else { formDigit.filter(p => p.x == 4 && p.y == 1)[0].char = unMatchedFive; }
+
+                            unMatchedFive = unMatchedSegmentsFromSmaller(potentialFive, formDigit.map(x => x.char).join(""));
+                            if (unMatchedFive.length === 1) {
+
+                                if (findChar(formDigit, 3, 2) === "") { formDigit.push(new Location(3, 2, unMatchedFive)); }
+                                else { formDigit.filter(p => p.x == 3 && p.y == 2)[0].char = unMatchedFive; }
+
+                                unMatchedFive = unMatchedSegmentsFromSmaller(one.values[0], formDigit.map(x => x.char).join(""));
+                                if (unMatchedFive.length === 1) {
+
+                                    if (findChar(formDigit, 1, 2) === "") { formDigit.push(new Location(1, 2, unMatchedFive)); }
+                                    else { formDigit.filter(p => p.x == 1 && p.y == 2)[0].char = unMatchedFive; }
+                                    break;
+                                }
+                            }
+                        }
+                    }
+
+                    if (findChar(formDigit, 4, 1) !== "") {
+
+                        for (let i = 0; i < hasFive.values.length; i++) {
+
+                            let lastSeg = hasFive.values[i];
+                            let last = unMatchedSegmentsFromSmaller(lastSeg, formDigit.map(x => x.char).join(""));
+                            last = unMatchedSegmentsFromSmaller(last, four.values[0]);
+                            last = unMatchedSegmentsFromSmaller(last, seven.values[0]);
+                            last = unMatchedSegmentsFromSmaller(last, one.values[0]);
+                            if (last.length === 1) {
+                                if (findChar(formDigit, 3, 0) === "") { formDigit.push(new Location(3, 0, last)); }
+                                break;
+                            }
+                        }
+                    }
+                }
+
             }
         }
+
+        const formedDigits = Array<string>();
+        formedDigits.push(findChar(formDigit, 0, 1) + findChar(formDigit, 1, 0) + findChar(formDigit, 1, 2) + findChar(formDigit, 3, 0) + findChar(formDigit, 3, 2) + findChar(formDigit, 4, 1)); // thats 0
+        formedDigits.push(findChar(formDigit, 1, 2) + findChar(formDigit, 3, 2)); // thats 1
+        formedDigits.push(findChar(formDigit, 0, 1) + findChar(formDigit, 1, 2) + findChar(formDigit, 2, 1) + findChar(formDigit, 3, 0) + findChar(formDigit, 4, 1)); // thats 2
+        formedDigits.push(findChar(formDigit, 0, 1) + findChar(formDigit, 1, 2) + findChar(formDigit, 2, 1) + findChar(formDigit, 3, 2) + findChar(formDigit, 4, 1)); // thats 3
+        formedDigits.push(findChar(formDigit, 1, 0) + findChar(formDigit, 1, 2) + findChar(formDigit, 2, 1) + findChar(formDigit, 3, 2));// thats 4
+        formedDigits.push(findChar(formDigit, 0, 1) + findChar(formDigit, 1, 0) + findChar(formDigit, 2, 1) + findChar(formDigit, 3, 2) + findChar(formDigit, 4, 1)); // thats 5
+        formedDigits.push(findChar(formDigit, 0, 1) + findChar(formDigit, 1, 0) + findChar(formDigit, 2, 1) + findChar(formDigit, 3, 0) + findChar(formDigit, 3, 2) + findChar(formDigit, 4, 1)); // thats 6
+        formedDigits.push(findChar(formDigit, 0, 1) + findChar(formDigit, 1, 2) + findChar(formDigit, 3, 2)); // thats 7
+        formedDigits.push(findChar(formDigit, 0, 1) + findChar(formDigit, 1, 0) + findChar(formDigit, 1, 2) + findChar(formDigit, 2, 1) + findChar(formDigit, 3, 0) + findChar(formDigit, 3, 2) + findChar(formDigit, 4, 1)); // thats 8
+        formedDigits.push(findChar(formDigit, 0, 1) + findChar(formDigit, 1, 0) + findChar(formDigit, 1, 2) + findChar(formDigit, 2, 1) + findChar(formDigit, 3, 2) + findChar(formDigit, 4, 1)); // thats 9
+
+        let result = "";
+        outputsIn.forEach(signal => {
+            result += findNumber(signal, formedDigits);
+        });
+
+        sum += parseInt(result);
     });
 
-    const formedDigits = Array<string>();
-    formedDigits.push(findChar(formDigit, 0, 1) + findChar(formDigit, 1, 0) + findChar(formDigit, 1, 2) + findChar(formDigit, 3, 0) + findChar(formDigit, 3, 2) + findChar(formDigit, 4, 1)) // thats 0
-    formedDigits.push(findChar(formDigit, 1, 2) + findChar(formDigit, 3, 2)); // thats 1
-    formedDigits.push(findChar(formDigit, 0, 1) + findChar(formDigit, 1, 2) + findChar(formDigit, 2, 1) + findChar(formDigit, 3, 0) + findChar(formDigit, 4, 1)); // thats 2
-    formedDigits.push(findChar(formDigit, 0, 1) + findChar(formDigit, 1, 2) + findChar(formDigit, 2, 1) + findChar(formDigit, 3, 2) + findChar(formDigit, 4, 1)); // thats 3
-    formedDigits.push(findChar(formDigit, 1, 0) + findChar(formDigit, 1, 2) + findChar(formDigit, 2, 1) + findChar(formDigit, 3, 2)) // thats 4
-    formedDigits.push(findChar(formDigit, 0, 1) + findChar(formDigit, 1, 0) + findChar(formDigit, 2, 1) + findChar(formDigit, 3, 2) + findChar(formDigit, 4, 1)) // thats 5
-    formedDigits.push(findChar(formDigit, 0, 1) + findChar(formDigit, 1, 0) + findChar(formDigit, 2, 1) + findChar(formDigit, 3, 0) + findChar(formDigit, 3, 2) + findChar(formDigit, 4, 1)) // thats 6
-    formedDigits.push(findChar(formDigit, 0, 1) + findChar(formDigit, 1, 2) + findChar(formDigit, 3, 2)) // thats 7
-    formedDigits.push(findChar(formDigit, 0, 1) + findChar(formDigit, 1, 0) + findChar(formDigit, 1, 2) + findChar(formDigit, 2, 1) + findChar(formDigit, 3, 0) + findChar(formDigit, 3, 2) + findChar(formDigit, 4, 1)) // thats 8
+    return sum;
+}
 
+
+function unMatchedSegmentsFromSmaller(smaller: string, bigger: string) {
+
+    const a = Array.from(smaller).sort(caseInsensitiveSort);
+    const b = Array.from(bigger).sort(caseInsensitiveSort);
     let result = "";
-    signalsIn.forEach(signal => {
-        result += findNumber(signal, formedDigits);
-    });
 
+    for (let i = 0; i < a.length; i++) {
+        if (b.indexOf(a[i]) === -1) {
+            result += a[i];
+        }
+    }
     return result;
 }
 
+function caseInsensitiveSort(a: string, b: string) {
+
+    a = a.toLowerCase();
+    b = b.toLowerCase();
+    if (a > b) { return 1; }
+    if (a < b) { return -1; }
+    return 0;
+}
+
 function findChar(formedDigit: Array<Location>, x: number, y: number): string {
+
     const value = formedDigit.filter(e => e.x === x && e.y === y)[0];
     return value ? value.char : "";
 }
@@ -137,8 +230,15 @@ function findChar(formedDigit: Array<Location>, x: number, y: number): string {
 function findNumber(signal: string, formedDigits: Array<string>): string {
 
     let digit = "";
+    const s = Array.from(signal).sort(caseInsensitiveSort).join("");
     for (let i = 0; i < formedDigits.length; i++) {
-        digit += (signal === formedDigits[i]) ? i.toString() : "";
+
+        let d = Array.from(formedDigits[i]).sort(caseInsensitiveSort).join("");
+        if (s === d) {
+            digit = i.toString();
+            break;
+        }
+
     }
 
     return digit;
