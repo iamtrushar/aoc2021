@@ -1,5 +1,6 @@
 import { inputReadString } from "../inFileReader";
 import { Location } from "../day9/Location";
+import { sortNumbers } from "../common";
 
 const inputByLine = inputReadString("./src/day9/input.txt");
 let points: Array<string> = new Array<string>();
@@ -63,14 +64,6 @@ function part2(): number {
 }
 
 
-function sortNumbers(a: number, b: number) {
-
-    if (a > b) { return 1; }
-    if (a < b) { return -1; }
-    return 0;
-}
-
-
 function getLowestValues(current: Location, all: Array<Location>): Location {
 
     const l = checkLeft(current, all);
@@ -98,7 +91,6 @@ function getLowestValues(current: Location, all: Array<Location>): Location {
 
     return lowestValue <= current.reading ? null : current;
 }
-
 
 function getBasinCount(current: Location, all: Array<Location>): number {
 
@@ -220,7 +212,6 @@ function getBasinCount(current: Location, all: Array<Location>): number {
     return depthCollections.length + 1; // add 1 for the initial one
 }
 
-
 function checkLeft(current: Location, all: Array<Location>): Location {
 
     return all.filter(p => p.x === current.x && (p.y === current.y - 1))[0]
@@ -239,5 +230,4 @@ function checkTop(current: Location, all: Array<Location>): Location {
 function checkBottom(current: Location, all: Array<Location>): Location {
 
     return all.filter(p => p.x === (current.x + 1) && p.y === current.y)[0]
-
 }

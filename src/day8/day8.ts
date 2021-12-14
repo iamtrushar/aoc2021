@@ -1,5 +1,6 @@
 import { inputReadString } from "../inFileReader";
-import { Location } from "./common";
+import { Location } from "./Location";
+import { caseInsensitiveSort , groupByArray} from "../common";
 
 const inputByLine = inputReadString("./src/day8/input.txt");
 
@@ -212,15 +213,6 @@ function unMatchedSegmentsFromSmaller(smaller: string, bigger: string) {
     return result;
 }
 
-function caseInsensitiveSort(a: string, b: string) {
-
-    a = a.toLowerCase();
-    b = b.toLowerCase();
-    if (a > b) { return 1; }
-    if (a < b) { return -1; }
-    return 0;
-}
-
 function findChar(formedDigit: Array<Location>, x: number, y: number): string {
 
     const value = formedDigit.filter(e => e.x === x && e.y === y)[0];
@@ -244,16 +236,3 @@ function findNumber(signal: string, formedDigits: Array<string>): string {
     return digit;
 }
 
-function groupByArray(xs, key) {
-    return xs.reduce(function (rv, x) {
-        let v = key instanceof Function ? key(x) : x[key];
-        let el = rv.find((r) => r && r.key === v);
-        if (el) {
-            el.values.push(x);
-        }
-        else {
-            rv.push({ key: v, values: [x] });
-        }
-        return rv;
-    }, []);
-}

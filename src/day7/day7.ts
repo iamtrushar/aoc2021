@@ -1,17 +1,13 @@
+import { sortNumbers } from "../common";
 import { inputReadSingleLineNumbers } from "../inFileReader";
 import { PositionTracker } from "./Tracker";
 
 
 const inputByLine = inputReadSingleLineNumbers("./src/day7/input.txt");
-const s = inputByLine.sort(compare);
+const s = inputByLine.sort(sortNumbers);
 
 console.log(`Part 1, answer : ${parts(s, "steady")}`);
 console.log(`Part 2, answer : ${parts(s, "increment")}`);
-
-function compare(a: number, b: number) {
-    if (a === b) { return 0 };
-    return a < b ? -1 : 1;
-}
 
 function parts(positions: Array<number>, burnRate: string): number {
 
