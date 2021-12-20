@@ -7,9 +7,10 @@ inputByLine.forEach(row => {
     rows.push(row.indexOf('\r') !== -1 ? row.substring(0, row.length - 1) : row)
 });
 
-part();
+console.log(`Part 1, answer : ${part(10)}`);
+console.log(`Part 2, answer : ${part(40)}`);
 
-function part(): void {
+function part(steps: number): number {
 
     const initialInput = rows[0];
 
@@ -20,19 +21,17 @@ function part(): void {
             const array = e.split(" -> ");
             instructions.push(new Instruction(array[0], array[1]));
         }
-
     });
 
 
     let modifiedStrain = "";
-    let steps = 10;
     while (steps-- > 0) {
 
-        let elastic = getPolymerTemplate(modifiedStrain === "" ? initialInput : modifiedStrain);
+        const elastic = getPolymerTemplate(modifiedStrain === "" ? initialInput : modifiedStrain);
         modifiedStrain = "";
         elastic.forEach(e => {
 
-            let find = instructions.filter(p => p.match === e);
+            const find = instructions.filter(p => p.match === e);
             if (find.length > 0) {
 
                 modifiedStrain = modifiedStrain.endsWith(e[0])
@@ -40,11 +39,8 @@ function part(): void {
                     : modifiedStrain + (e[0] + find[0].inject + e[1]);
             }
         });
+        console.log(modifiedStrain.length);
     }
-
-    console.log(`B ${modifiedStrain.match(/B/g).length}`);
-    console.log(`H ${modifiedStrain.match(/H/g).length}`);
-    console.log(modifiedStrain.length);
 
     let uniquePolymer = Array<string>();
     instructions.forEach(e => {
@@ -60,10 +56,7 @@ function part(): void {
 
     const max = counters.filter(x => x.count === Math.max(...counters.map(x => x.count)))[0].count;
     const min = counters.filter(x => x.count === Math.min(...counters.map(x => x.count)))[0].count;
-    console.log(max - min);
-    //console.log(countChar(modifiedStrain, "H"));
-
-
+    return (max - min);
 }
 
 function countChar(polymerChain: string, matchChar: string): number {
@@ -73,7 +66,6 @@ function countChar(polymerChain: string, matchChar: string): number {
 function getPolymerTemplate(initialInput: string): Array<string> {
 
     const inputs = initialInput.split("");
-
     let elastic = new Array<string>();
     inputs.forEach((element, index) => {
         if (index + 1 < inputs.length) {
